@@ -3,11 +3,14 @@
 set -e
 
 # Check that all needed environment variables are set.
-if [[ -z $PROJECT_ID ]]; then echo 'PROJECT_ID is not defined in your travis environment variables.'; fi
-if [[ -z $CI_SERVICE_ACCOUNT ]]; then echo 'CI_SERVICE_ACCOUNT is not defined in your ci repository environment variables.'; fi
-if [[ -z $CI_SERVICE_ACCOUNT_KEY ]]; then echo 'CI_SERVICE_ACCOUNT_KEY is not defined in your ci repository environment variables.'; fi
-if [[ -z $CF_API_KEY ]]; then echo 'CF_API_KEY is not defined in your ci repository environment variables.'; fi
-if [[ -z $CF_API_EMAIL ]]; then echo 'CF_API_EMAIL is not defined in your ci repository environment variables.'; fi
+PASS=true
+if [[ -z $PROJECT_ID ]]; then echo 'PROJECT_ID is not defined in your travis environment variables.'; PASS=false; fi
+if [[ -z $CI_SERVICE_ACCOUNT ]]; then echo 'CI_SERVICE_ACCOUNT is not defined in your ci repository environment variables.'; PASS=false; fi
+if [[ -z $CI_SERVICE_ACCOUNT_KEY ]]; then echo 'CI_SERVICE_ACCOUNT_KEY is not defined in your ci repository environment variables.'; PASS=false; fi
+if [[ -z $CF_API_KEY ]]; then echo 'CF_API_KEY is not defined in your ci repository environment variables.'; PASS=false; fi
+if [[ -z $CF_API_EMAIL ]]; then echo 'CF_API_EMAIL is not defined in your ci repository environment variables.'; PASS=false; fi
+if [[ -z $BRANCH ]]; then echo 'BRANCH is not defined in your ci repository environment variables. Did you change the configuration to an invalid one?'; PASS=false; fi
+if [[ $PASS != "true" ]]; then exit 1; fi
 
 # To enable blackfire, set the BLACKFIRE_SERVER_ID and BLACKFIRE_SERVER_TOKEN variables.
 if [[ ! -z $BLACKFIRE_SERVER_ID && ! -z $BLACKFIRE_SERVER_TOKEN ]]; then
@@ -40,10 +43,14 @@ if [[ -z $DATABASE_PASSWORD ]]; then
     export DATABASE_PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 fi
 
+export RELEASE=`echo $BRANCH | sed -E "s/\//-/g" | sed -e 's/\(.*\)/\L\1/'`
+export NAMESPACE=$RELEASE
 export PROJECT_NAME=`echo $REPOSITORY | sed -E "s/\//-/g" | sed -e 's/\(.*\)/\L\1/'`
 export PHP_REPOSITORY="${DOCKER_REPOSITORY}/php"
 export NGINX_REPOSITORY="${DOCKER_REPOSITORY}/nginx"
 export VARNISH_REPOSITORY="${DOCKER_REPOSITORY}/varnish"
+export ADMIN_REPOSITORY="${DOCKER_REPOSITORY}/admin"
+export CLIENT_REPOSITORY="${DOCKER_REPOSITORY}/client"
 if [[ $BRANCH == $DEPLOYMENT_BRANCH ]]
 then
     export TAG=latest

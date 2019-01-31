@@ -17,8 +17,6 @@ cache:
 env:
   global:
     - BRANCH=$TRAVIS_BRANCH
-    - RELEASE=`echo $BRANCH | sed -E "s/\//-/g" | sed -e 's/\(.*\)/\L\1/'`
-    - NAMESPACE=$RELEASE
 
 before_install:
   - source ci/.env
@@ -32,8 +30,8 @@ before_script:
   - npm install -g react-scripts
   - while sudo lsof -Pi :5432 -sTCP:LISTEN -t; do sleep 1; done
 
-script: true
-  #- ./ci/test
+script:
+  - ./ci/test
 
 before_deploy:
   - source ci/before_deploy
